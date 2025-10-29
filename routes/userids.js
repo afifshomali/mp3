@@ -45,7 +45,7 @@ module.exports = function (router) {
             const toAdd = newPending.filter(id => !oldPending.includes(id));
             const toRemove = oldPending.filter(id => !newPending.includes(id));
 
-            // Validate Tasks exists & not assigned to other users
+            // Validate Tasks exists, is not completed & not assigned to other users
             if (toAdd.length) {
                 const tasks = await Task.find({ _id: { $in: toAdd } }).exec();
                 const foundIds = tasks.map(t => t._id.toString());
@@ -55,6 +55,12 @@ module.exports = function (router) {
                     return res.status(400).json({ message: 'One or more pendingTasks not found', data: notFound });
                 }
 
+                const completedTasks = tasks.filter(t => t.completed === true);
+                if (completedTasks.length) {
+                    const completedIds = completedTasks.map(t => t._id.toString());
+                    return res.status(400).json({ message: 'One or more pendingTasks are already completed', data: completedIds });
+                }
+                
                 const conflicts = tasks.filter(t => t.assignedUser && t.assignedUser !== "" && t.assignedUser !== user._id.toString());
                 if (conflicts.length) {
                     const conflictIds = conflicts.map(t => t._id.toString());
