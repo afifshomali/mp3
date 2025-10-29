@@ -27,7 +27,7 @@ module.exports = function (router) {
             query.limit(100);
         }
 
-        if (req.query["count"] === 'true' || req.query["count"] === true) {
+        if (req.query["count"] === 'true' || req.query["count"] === "'true'" || req.query["count"] === '"true"' || req.query["count"] === true) {
             try {
                 const cnt = await query.countDocuments().exec();
                 return res.status(200).json({ message: 'Task Count Retrieved', data: cnt });

@@ -29,7 +29,7 @@ module.exports = function (router) {
         }
 
         // Check if just to return count
-        if (req.query["count"] === "'true'" || req.query["count"] === '"true"' || req.query["count"] === true) {
+        if (req.query["count"] === 'true' || req.query["count"] === "'true'" || req.query["count"] === '"true"' || req.query["count"] === true) {
             try {
                 const cnt = await query.countDocuments().exec();
                 return res.status(200).json({ message: 'User Count Retrieved', data: cnt });
