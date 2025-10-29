@@ -70,8 +70,8 @@ module.exports = function (router) {
             // Wrap pendingTasks updates and task save in a transaction using Task.db.transaction
             try {
                 await Task.db.transaction(async (session) => {
-                    // Remove task from previous user's pendingTasks
-                    if (task.assignedUser !== "" && task.assignedUser !== assignedUserId) {
+                    // Remove task from previous user's pendingTasks if reassigned or marked complete
+                    if (task.assignedUser !== "" && (task.assignedUser !== assignedUserId || completed === true)) {
                         await User.updateOne(
                             { _id: task.assignedUser },
                             { $pull: { pendingTasks: task._id.toString() } },
@@ -79,29 +79,11 @@ module.exports = function (router) {
                         ).exec();
                     }
 
-                    // Add task to new user's pendingTasks only if reassigned
-                    if (assignedUserId !== "" && completed === false && task.assignedUser !== assignedUserId) {
+                    // Add task to user's pendingTasks if task is incomplete
+                    if (assignedUserId !== "" && completed === false) {
                         await User.updateOne(
                             { _id: assignedUserId },
                             { $addToSet: { pendingTasks: task._id.toString() } },
-                            { session }
-                        ).exec();
-                    }
-
-                    // Add task to pendingTasks if marked incomplete and not reassigned
-                    if (task.completed && completed === false && assignedUserId && task.assignedUser === assignedUserId) {
-                        await User.updateOne(
-                            { _id: assignedUserId },
-                            { $addToSet: { pendingTasks: task._id.toString() } },
-                            { session }
-                        ).exec();
-                    }
-
-                    // Remove task from pendingTasks if marked complete
-                    if (!task.completed && completed === true && task.assignedUser) {
-                        await User.updateOne(
-                            { _id: task.assignedUser },
-                            { $pull: { pendingTasks: task._id.toString() } },
                             { session }
                         ).exec();
                     }
